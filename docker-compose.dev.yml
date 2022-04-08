@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo
+    ports:
+      - 27017:27017
+      - 27020:27020
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      # MONGO_INITDB_DATABASE: jssandbox
+    links:
+      - server
+  server:
+    image: node:16.13.2-alpine3.15
+    ports:
+      - 3001:3001
+    volumes:
+      - ./server:/server
+      - ./server/node_modules:/server/node_modules
+    environment:
+      NODE_ENV: development
+    working_dir: /server
+    command: sh -c "cd /server; npm run start:dev"
+  client:
+    image: node:16.13.2-alpine3.15
+    ports:
+      - 3000:3000
+    volumes:
+      - ./client:/client
+      - ./client/node_modules:/client/node_modules
+    environment:
+      NODE_ENV: development
+    working_dir: /client
+    command: sh -c "cd /client; npm run start"
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/conf.d/default.conf
+    links:
+      - client
+      - server
